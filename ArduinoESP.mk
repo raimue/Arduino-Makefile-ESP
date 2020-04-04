@@ -559,7 +559,7 @@ ifeq ($(strip $(NO_CORE)),)
     endif
 
 	ifndef F_CPU
-        SPEEDS := $(call PARSE_BOARD,"$(BOARD_TAG),menu.CpuFrequency.*.build.f_cpu") # Obtain sequence of supported frequencies.
+        SPEEDS := $(call PARSE_BOARD,$(BOARD_TAG),menu.(CpuFrequency|xtal).*.build.f_cpu) # Obtain sequence of supported frequencies.
         # SPEEDS := $(shell printf "%d\n" $(SPEEDS) | sort -g) # Sort it, just in case. Printf to re-append newlines so that sort works. | Sort doesn't work, OSX prob?
         # F_CPU := $(lastword $(SPEEDS)) # List is sorted in ascending order. Take the fastest speed.
         F_CPU := $(firstword $(SPEEDS))
@@ -574,15 +574,15 @@ ifeq ($(strip $(NO_CORE)),)
 
     ifndef ESP_FLASHSIZE
     	# Obtain sequence of supported flash sizes by locating unique *.build.flash_size -keys.
-        FLASH_SIZES := $(shell grep -Ev '^\#' $(BOARDS_TXT) | grep -E "^[ \t]*$(BOARD_TAG).menu.FlashSize.*.build.flash_size=" | cut -d = -f 1 | cut -d . -f 4)
+        FLASH_SIZES := $(shell grep -Ev '^\#' $(BOARDS_TXT) | grep -E "^[ \t]*$(BOARD_TAG).menu.(FlashSize|eesz).*.build.flash_size=" | cut -d = -f 1 | cut -d . -f 4)
         #$(info "flash_sizes is " $(FLASH_SIZES))  # Good for debugging
     	# Select first one as default
     	FLASH_SIZE := $(firstword $(FLASH_SIZES))
-        ESP_FLASHSIZE := $(call PARSE_BOARD,$(BOARD_TAG),menu.FlashSize.$(FLASH_SIZE).build.flash_size)
+        ESP_FLASHSIZE := $(call PARSE_BOARD,$(BOARD_TAG),menu.(FlashSize|eesz).$(FLASH_SIZE).build.flash_size)
 
     	# eg.LINKER_SCRIPTS = "-Teagle.flash.4m1m.ld"
     	ifndef LINKER_SCRIPTS 
-            FLASH_LD := $(call PARSE_BOARD,$(BOARD_TAG),menu.FlashSize.$(FLASH_SIZE).build.flash_ld)
+            FLASH_LD := $(call PARSE_BOARD,$(BOARD_TAG),menu.(FlashSize|eesz).$(FLASH_SIZE).build.flash_ld)
             ifneq (,$(strip $(FLASH_LD)))
             	LINKER_SCRIPTS := "-T$(strip $(FLASH_LD))"
             endif
@@ -1003,8 +1003,8 @@ ifndef ESP_UPLOAD_SPEED
     # first look for $(BOARD_TAG).upload.speed
     ESP_UPLOAD_SPEED := $(strip $(call PARSE_BOARD,$(BOARD_TAG),upload.speed))
     ifeq (,$(ESP_UPLOAD_SPEED))
-        # then look for $(BOARD_TAG).menu.UploadSpeed.*.upload.speed
-        ESP_UPLOAD_SPEED := $(strip $(firstword $(call PARSE_BOARD,$(BOARD_TAG),menu.UploadSpeed.*.upload.speed)))
+        # then look for $(BOARD_TAG).menu.(UploadSpeed|baud).*.upload.speed
+        ESP_UPLOAD_SPEED := $(strip $(firstword $(call PARSE_BOARD,$(BOARD_TAG),menu.(UploadSpeed|baud).*.upload.speed)))
         ifeq (,$(ESP_UPLOAD_SPEED))
             ESP_UPLOAD_SPEED = 115200
         endif
